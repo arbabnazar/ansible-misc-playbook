@@ -1,0 +1,24 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+  vars:
+    remote_dir: "/files"
+  tasks:
+    - name: Get the list of all file names inside the directory
+      shell: "(cd {{ remote_dir }}; find . -maxdepth 1 -type f) | cut -d'/' -f2"
+      register: files_to_rename
+      changed_when: no
+
+    - name: Rename the files (Here we use the copy technique)
+      copy: 
+        src: "{{ remote_dir }}/{{ item.1 }}"
+        dest: "{{ remote_dir }}/file-{{ item.0 + 1 }}"
+        remote_src: yes
+      with_indexed_items: "{{ files_to_rename.stdout_lines }}"
+
+    - name: Remove the source files that we have renamed
+      file:
+        path: "{{ remote_dir }}/{{ item }}"
+        state: absent
+      when: '"file-" not in item'
+      with_items: "{{ files_to_rename.stdout_lines }}"
