@@ -1,0 +1,5 @@
+- name: Tell the host about our servers it might want to ssh to
+  known_hosts:
+    path: '/etc/ssh/ssh_known_hosts'
+    name: 'github.com'
+    key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
